@@ -19,9 +19,13 @@ services:
       # - KAG_sv_gravity=12
       # - KAG_sv_maxping=400
     volumes:
+      # Security: copy repo Security/ and add admins to superadmin.cfg
       - ./Security:/opt/KAG/Security
-#      - ./Mods:/opt/KAG/Mods
-#      - ./mods.cfg:/opt/KAG/mods.cfg
+      # Mods: create Mods/ and mods.cfg, then uncomment:
+      - ./Mods:/opt/KAG/Mods
+      - ./mods.cfg:/opt/KAG/mods.cfg
+      # Custom autoconfig (optional): create file first, then uncomment:
+      # - ./autoconfig.cfg:/opt/KAG/autoconfig.cfg
     restart: unless-stopped
     ports:
       - 50301:50301

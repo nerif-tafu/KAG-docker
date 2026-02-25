@@ -54,18 +54,43 @@ Examples:
 
 These override the values from the template (and the built-in env vars like `NAME`, `GAMEMODE`) if the container is starting with a fresh config.
 
-# Advanced
+# Mods, Security & autoconfig (mount your data)
 
-## Mods
-In the same directory as your startup script create a Mods folder and install your mods there. Then make your mods.cfg file
+Use **volume mounts** so the container uses your Mods, Security files, and optional custom autoconfig. Create the folders (and files) on your host, then mount them.
 
-Then add `-v Mods:/opt/KAG/Mods -v mods.cfg:/opt/KAG/mods.cfg` to your command.
+| What       | Host path      | Mount in container   |
+|-----------|----------------|----------------------|
+| **Mods**  | `./Mods`       | `/opt/KAG/Mods`      |
+| **Mods list** | `./mods.cfg` | `/opt/KAG/mods.cfg`  |
+| **Security**  | `./Security` | `/opt/KAG/Security`  |
+| **autoconfig** | `./autoconfig.cfg` | `/opt/KAG/autoconfig.cfg` |
 
-## Security
-Create a Security directory in the same location as your startup script then add
-`-v Security:/opt/KAG/Security` to your command.
+- **Security**: Copy the `Security` folder from this repo and add your admins to `superadmin.cfg`. Mount it so bans and seclevs persist.
+- **Mods**: Create a `Mods` folder, put your mods in it, create `mods.cfg` listing them. Mount both so the server loads your mods.
+- **autoconfig**: Optional. If you mount your own `autoconfig.cfg`, the server uses it and does not generate one from env vars. Create the file first (e.g. copy from `bin/autoconfig.cfg` and edit).
 
-## autoconfig
-If you need to change the autoconfig beyond what the environment variables can do, you can create an autoconfig.cfg file in the same location as your script.
+### docker run (all mounts)
 
-`-v autoconfig.cfg:/opt/KAG/autoconfig.cfg`
+```bash
+docker run --rm -d -p 50301:50301/tcp -p 50301:50301/udp \
+  -e NAME="My Server" -e RCON_PASSWORD="secret" \
+  -v "$(pwd)/Security:/opt/KAG/Security" \
+  -v "$(pwd)/Mods:/opt/KAG/Mods" \
+  -v "$(pwd)/mods.cfg:/opt/KAG/mods.cfg" \
+  -v "$(pwd)/autoconfig.cfg:/opt/KAG/autoconfig.cfg" \
+  ghcr.io/nerif-tafu/kag-dedicatedserver:latest
+```
+
+Omit any `-v` line you don’t need (e.g. drop the Mods and mods.cfg lines if you don’t use mods; drop autoconfig if you rely on env-only config).
+
+### docker-compose
+
+In `docker-compose.yml` the same mounts are available. Uncomment the lines for Mods and/or autoconfig if you use them; Security is mounted by default.
+
+```yaml
+volumes:
+  - ./Security:/opt/KAG/Security
+  - ./Mods:/opt/KAG/Mods
+  - ./mods.cfg:/opt/KAG/mods.cfg
+  # - ./autoconfig.cfg:/opt/KAG/autoconfig.cfg
+```
