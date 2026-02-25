@@ -1,0 +1,71 @@
+# Installing
+First you need to install the docker daemon on your server.
+If your server is running debian/ubuntu you can simply do
+`sudo apt-get install docker.io -y && sudo systemctl start docker`
+
+Then clone the repository
+`git clone https://github.com/Harrison-Miller/kag-dedicatedserver.git`
+`cd kag-dedicatedserver`
+
+modify run.sh to have the proper configuration following the instruction below.
+Then start your server with `./run.sh`
+
+# Running
+Create a script to start the docker container with the correct parameters
+
+docker run --rm -d -p 50301:50301 harrisonmiller/kag-dedicatedserver:latest
+
+You can copy the example script run.sh and the Security folder.
+The security folder contains the Official KAG Server Admin Seclev.
+You should also add your own name to the superadmin.cfg
+
+# Configuration
+Use the environment variables as needed to configure the basics of your server
+
+docker run --rm -d -p 50301:50301 -e NAME="Verra's CTF" \
+	-e DESCRIPTION="Vanilla CTF server hosted by Verra" harrisonmiller/kag-dedicatedserver:latest
+
+Additional environment variables and their defaults
+```
+GAMEMODE="CTF"
+NAME="Default Server"
+DESCRIPTION=""
+MAX_PLAYERS=20
+MAPCYCLE=""
+SV_PASSWORD=""
+RCON_PASSWORD=""
+PORT="50301"
+```
+
+### Overriding any autoconfig value
+You can set **any** key from `autoconfig.cfg` via environment variables by using the `KAG_` prefix. The rest of the variable name must match the config key exactly.
+
+Examples:
+```bash
+# Set server gravity
+-e KAG_sv_gravity=12
+
+# Set max ping before kick
+-e KAG_sv_maxping=400
+
+# Override multiple options
+-e KAG_sv_maxplayers=32 -e KAG_sv_maxping=500 -e KAG_g_debug=1
+```
+
+These override the values from the template (and the built-in env vars like `NAME`, `GAMEMODE`) if the container is starting with a fresh config.
+
+# Advanced
+
+## Mods
+In the same directory as your startup script create a Mods folder and install your mods there. Then make your mods.cfg file
+
+Then add `-v Mods:/opt/KAG/Mods -v mods.cfg:/opt/KAG/mods.cfg` to your command.
+
+## Security
+Create a Security directory in the same location as your startup script then add
+`-v Security:/opt/KAG/Security` to your command.
+
+## autoconfig
+If you need to change the autoconfig beyond what the environment variables can do, you can create an autoconfig.cfg file in the same location as your script.
+
+`-v autoconfig.cfg:/opt/KAG/autoconfig.cfg`
