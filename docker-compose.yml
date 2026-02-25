@@ -15,6 +15,8 @@ services:
       - MAPCYCLE=
       - SV_PASSWORD=prettysecret
       - RCON_PASSWORD=supersecret
+      # Super admin usernames (comma or semicolon separated)
+      # - SUPERADMIN_USERS=Admin1,Admin2
       # Optional: set any autoconfig key via KAG_<key>, e.g.:
       # - KAG_sv_gravity=12
       # - KAG_sv_maxping=400

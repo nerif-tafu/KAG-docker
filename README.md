@@ -37,6 +37,16 @@ RCON_PASSWORD=""
 PORT="50301"
 ```
 
+### Super admin by name (SUPERADMIN_USERS)
+Set one or more usernames as super admins via env (KAG **username**, not display name). Comma- or semicolon-separated.
+
+```bash
+-e SUPERADMIN_USERS="MyUsername"
+-e SUPERADMIN_USERS="Admin1,Admin2,Admin3"
+```
+
+If `Security/superadmin.cfg` already exists (e.g. you mounted the Security folder), the entrypoint updates only the `users =` line. If it doesn’t exist, it creates a default `superadmin.cfg` with those users.
+
 ### Overriding any autoconfig value
 You can set **any** key from `autoconfig.cfg` via environment variables by using the `KAG_` prefix. The rest of the variable name must match the config key exactly.
 

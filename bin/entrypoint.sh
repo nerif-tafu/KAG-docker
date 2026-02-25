@@ -54,4 +54,24 @@ if [[ ! -f /opt/KAG/autoconfig.cfg ]]; then
 	mv /opt/KAG/autoconfig.cfg.new /opt/KAG/autoconfig.cfg
 fi
 
+# Super admin by name via SUPERADMIN_USERS (comma or semicolon separated usernames)
+if [[ -n "$SUPERADMIN_USERS" ]]; then
+	mkdir -p /opt/KAG/Security
+	# Normalize to "User1; User2; " format (semicolon-delimited, per KAG seclev format)
+	users_line=$(echo "$SUPERADMIN_USERS" | tr ',;' '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | grep -v '^$' | sed 's/$/;/' | tr -d '\n' | sed 's/;$/; /')
+	if [[ -f /opt/KAG/Security/superadmin.cfg ]]; then
+		escaped=$(echo "$users_line" | sed 's/\\/\\\\/g; s/&/\\&/g')
+		sed -i "s|^users = .*|users = $escaped|" /opt/KAG/Security/superadmin.cfg
+	else
+		cat > /opt/KAG/Security/superadmin.cfg << EOF
+name = Super Admin
+users = $users_line
+roles = rcon;
+commands = ALL;
+features = admin_color; always_change_team; ban_immunity; editor; freeze_immunity; ignore_immunity; join_full; kick_immunity; map_vote; mark_any_team; mark_player; mute_immunity; name_mouseover; name_mouseover_spectator; pingkick_immunity; silent_rcon; skip_votewait; spectator; view_collapses; view_console; view_rcon; vote_cancel; hidename; hidenameid; showname; shownameid;
+assign = admin; vip; normal; premium;
+EOF
+	fi
+fi
+
 exec "$@"
