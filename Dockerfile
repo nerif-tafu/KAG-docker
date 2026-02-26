@@ -1,4 +1,4 @@
-FROM ubuntu:18.04 as build
+FROM ubuntu:20.04 as build
 
 # Download and uncompress the software
 RUN apt-get update -y && \
@@ -8,15 +8,16 @@ RUN apt-get update -y && \
 	tar -zxf /tmp/kag-linux32-dedicated-release.tar.gz -C /opt/KAG
 
 # Using multi-stage build to remove extra layers
-FROM ubuntu:18.04
+FROM ubuntu:20.04
 
 # Install dependencies to run the server
+ENV DEBIAN_FRONTEND=noninteractive
 RUN dpkg --add-architecture i386 && \
 	apt-get update -y && \
 	apt-get install libc6:i386 libstdc++6:i386 libglapi-mesa:i386 \
 	libgl1-mesa-glx:i386 libxxf86vm1:i386 libxext6:i386 libx11-6:i386 \
-	libfreetype6:i386 libgcc1-dbg:i386 libxdamage1:i386 libxfixes3:i386 \
-	libx11-xcb1:i386 libxcb-glx0:i386 libxcb-dri2-0:i386 libxcb1:i386  \
+	libfreetype6:i386 libxdamage1:i386 libxfixes3:i386 \
+	libx11-xcb1:i386 libxcb-glx0:i386 libxcb-dri2-0:i386 libxcb1:i386 \
 	libdrm2:i386 libxdmcp6:i386 -y && \
 	mkdir -p /opt/KAG
 
