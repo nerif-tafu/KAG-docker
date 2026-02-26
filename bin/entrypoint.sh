@@ -30,12 +30,18 @@ assign =
 NORMAL
 	fi
 	rm -rf /opt/KAG/Security /opt/KAG/Mods
-	rm -f /opt/KAG/mods.cfg
-	ln -sf /data/Security /opt/KAG/Security
-	ln -sf /data/Mods /opt/KAG/Mods
-	ln -sf /data/mods.cfg /opt/KAG/mods.cfg
-	[[ -f /data/autoconfig.cfg ]] && rm -f /opt/KAG/autoconfig.cfg && ln -sf /data/autoconfig.cfg /opt/KAG/autoconfig.cfg
-fi
+		rm -f /opt/KAG/mods.cfg
+		ln -sf /data/Security /opt/KAG/Security
+		ln -sf /data/Mods /opt/KAG/Mods
+		ln -sf /data/mods.cfg /opt/KAG/mods.cfg
+		# Game also reads/writes Security from Base/Security (CWD is /opt/KAG/Base/) — point it at same mount
+		[[ -d /opt/KAG/Base ]] && rm -rf /opt/KAG/Base/Security && ln -sf /data/Security /opt/KAG/Base/Security
+		[[ -f /data/autoconfig.cfg ]] && rm -f /opt/KAG/autoconfig.cfg && ln -sf /data/autoconfig.cfg /opt/KAG/autoconfig.cfg
+		# Ensure optional Security files exist on mount so game doesn't create them under Base/Security
+		for f in blacklist.cfg ignorelist.cfg hidenamelist.cfg; do
+			[[ -f /data/Security/$f ]] || touch /data/Security/$f
+		done
+	fi
 
 if [[ ! -f /opt/KAG/autoconfig.cfg ]]; then
 	echo "Starting a server: $NAME"
@@ -110,11 +116,11 @@ assign = admin; vip; normal; premium;
 EOF
 	fi
 	# Always ensure seclevs.cfg + normal.cfg load our superadmin (fixes stale PVC from older runs)
-	cat > /opt/KAG/Security/seclevs.cfg << 'SECLEVS'
+		cat > /opt/KAG/Security/seclevs.cfg << 'SECLEVS'
 levels_active = 1
 levels_files = ../Security/superadmin.cfg; ../Security/normal.cfg;
 SECLEVS
-	cat > /opt/KAG/Security/normal.cfg << 'NORMAL'
+		cat > /opt/KAG/Security/normal.cfg << 'NORMAL'
 name = Normal
 users =
 roles =
@@ -122,6 +128,7 @@ commands =
 features =
 assign =
 NORMAL
+	echo "[entrypoint] SUPERADMIN_USERS applied: $(cat /opt/KAG/Security/superadmin.cfg | grep -E '^users = ')"
 fi
 
 exec "$@"
