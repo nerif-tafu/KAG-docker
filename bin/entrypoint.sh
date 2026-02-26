@@ -109,13 +109,12 @@ features = always_change_team; ban_immunity; freeze_immunity; ignore_immunity; j
 assign = admin; vip; normal; premium;
 EOF
 	fi
-	# Game only loads our superadmin if seclevs.cfg exists and lists it; last level = default for other players
-	if [[ ! -f /opt/KAG/Security/seclevs.cfg ]]; then
-		cat > /opt/KAG/Security/seclevs.cfg << 'SECLEVS'
+	# Always ensure seclevs.cfg + normal.cfg load our superadmin (fixes stale PVC from older runs)
+	cat > /opt/KAG/Security/seclevs.cfg << 'SECLEVS'
 levels_active = 1
 levels_files = ../Security/superadmin.cfg; ../Security/normal.cfg;
 SECLEVS
-		cat > /opt/KAG/Security/normal.cfg << 'NORMAL'
+	cat > /opt/KAG/Security/normal.cfg << 'NORMAL'
 name = Normal
 users =
 roles =
@@ -123,7 +122,6 @@ commands =
 features =
 assign =
 NORMAL
-	fi
 fi
 
 exec "$@"
