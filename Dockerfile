@@ -27,6 +27,7 @@ RUN chmod +x /opt/KAG/dedicatedserver.sh && chmod +x /opt/KAG/KAGdedi
 
 ADD bin/entrypoint.sh /opt/KAG/entrypoint.sh
 ADD bin/autoconfig.cfg /opt/KAG/autoconfig.cfg.tmpl
+RUN chmod +x /opt/KAG/entrypoint.sh
 
 EXPOSE 50301/tcp
 EXPOSE 50301/udp
