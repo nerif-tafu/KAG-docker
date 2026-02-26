@@ -2,6 +2,41 @@
 
 set -e
 
+# Single /data mount: bootstrap structure if needed, then symlink so one volume = persistent data, zero manual setup
+if [[ -d /data ]]; then
+	mkdir -p /data/Security /data/Mods
+	[[ -f /data/mods.cfg ]] || touch /data/mods.cfg
+	# Bootstrap Security defaults if empty (cattle: mount empty data/ and go)
+	if [[ ! -f /data/Security/superadmin.cfg ]]; then
+		cat > /data/Security/superadmin.cfg << 'SUPER'
+name = Super Admin
+users =
+roles = rcon;
+commands = ALL;
+features = always_change_team; ban_immunity; freeze_immunity; ignore_immunity; join_full; kick_immunity; map_vote; mark_any_team; mark_player; mute_immunity; name_mouseover; name_mouseover_spectator; pingkick_immunity; skip_votewait; spectator; view_collapses; view_rcon; vote_cancel;
+assign = admin; vip; normal; premium;
+SUPER
+		cat > /data/Security/seclevs.cfg << 'SECLEVS'
+levels_active = 1
+levels_files = ../Security/superadmin.cfg; ../Security/normal.cfg;
+SECLEVS
+		cat > /data/Security/normal.cfg << 'NORMAL'
+name = Normal
+users =
+roles =
+commands =
+features =
+assign =
+NORMAL
+	fi
+	rm -rf /opt/KAG/Security /opt/KAG/Mods
+	rm -f /opt/KAG/mods.cfg
+	ln -sf /data/Security /opt/KAG/Security
+	ln -sf /data/Mods /opt/KAG/Mods
+	ln -sf /data/mods.cfg /opt/KAG/mods.cfg
+	[[ -f /data/autoconfig.cfg ]] && rm -f /opt/KAG/autoconfig.cfg && ln -sf /data/autoconfig.cfg /opt/KAG/autoconfig.cfg
+fi
+
 if [[ ! -f /opt/KAG/autoconfig.cfg ]]; then
 	echo "Starting a server: $NAME"
 	echo "$DESCRIPTION"
@@ -60,8 +95,10 @@ if [[ -n "$SUPERADMIN_USERS" ]]; then
 	# Normalize to "User1; User2; " format (semicolon-delimited, per KAG seclev format)
 	users_line=$(echo "$SUPERADMIN_USERS" | tr ',;' '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | grep -v '^$' | sed 's/$/;/' | tr -d '\n' | sed 's/;$/; /')
 	if [[ -f /opt/KAG/Security/superadmin.cfg ]]; then
-		escaped=$(echo "$users_line" | sed 's/\\/\\\\/g; s/&/\\&/g')
-		sed -i "s|^users = .*|users = $escaped|" /opt/KAG/Security/superadmin.cfg
+		# Update users line (robust for CRLF/whitespace on mounted Security)
+		awk -v u="$users_line" 'BEGIN { done=0 } /^[[:space:]]*users[[:space:]]*=/ { print "users = " u; done=1; next } { print } END { if (!done) print "users = " u }' \
+			/opt/KAG/Security/superadmin.cfg > /opt/KAG/Security/superadmin.cfg.tmp && \
+			mv /opt/KAG/Security/superadmin.cfg.tmp /opt/KAG/Security/superadmin.cfg
 	else
 		cat > /opt/KAG/Security/superadmin.cfg << EOF
 name = Super Admin

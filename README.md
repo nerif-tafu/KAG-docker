@@ -4,7 +4,7 @@ Run a [King Arthur's Gold](https://kag2d.com/) dedicated server in Docker. Image
 
 ## Running
 
-**Quick start (no volumes):**
+**Quick start (no persistent data):**
 
 ```bash
 docker run --rm -d -p 50301:50301/tcp -p 50301:50301/udp \
@@ -12,18 +12,18 @@ docker run --rm -d -p 50301:50301/tcp -p 50301:50301/udp \
   ghcr.io/nerif-tafu/kag-dedicatedserver:latest
 ```
 
-**With Security, Mods, and optional autoconfig** — create the folders/files on your host, then mount them:
+**With persistent data (one volume, zero manual setup):**
+
+Mount a single `data/` directory. The container creates `data/Security`, `data/Mods`, and `data/mods.cfg` if missing, and writes default Security config so the game and `SUPERADMIN_USERS` work immediately.
 
 ```bash
 docker run --rm -d -p 50301:50301/tcp -p 50301:50301/udp \
-  -e NAME="My Server" -e RCON_PASSWORD="secret" \
-  -v "$(pwd)/Security:/opt/KAG/Security" \
-  -v "$(pwd)/Mods:/opt/KAG/Mods" \
-  -v "$(pwd)/mods.cfg:/opt/KAG/mods.cfg" \
+  -e NAME="My Server" -e RCON_PASSWORD="secret" -e SUPERADMIN_USERS="MyUsername" \
+  -v "$(pwd)/data:/data" \
   ghcr.io/nerif-tafu/kag-dedicatedserver:latest
 ```
 
-Omit any `-v` line you don’t use. Optional: add `-v "$(pwd)/autoconfig.cfg:/opt/KAG/autoconfig.cfg"` if you have a custom autoconfig.
+Optional: put `autoconfig.cfg` in `data/` to use a full custom config instead of env-generated one.
 
 ## Configuration
 
@@ -39,7 +39,7 @@ Omit any `-v` line you don’t use. Optional: add `-v "$(pwd)/autoconfig.cfg:/op
 | `SV_PASSWORD` | (empty) | Server password |
 | `RCON_PASSWORD` | (empty) | RCON password (set for TCPR) |
 | `PORT` | 50301 | Server port |
-| `SUPERADMIN_USERS` | (empty) | KAG usernames (not display names) as super admins; comma or semicolon separated. Creates or updates `superadmin.cfg` / `seclevs.cfg` if Security isn’t mounted. |
+| `SUPERADMIN_USERS` | (empty) | KAG usernames (not display names) as super admins; comma or semicolon separated. Entrypoint updates `superadmin.cfg` in `data/Security` when mounted. |
 
 ### Any autoconfig key (KAG_ prefix)
 
@@ -49,13 +49,4 @@ Override any `autoconfig.cfg` key via env: use the `KAG_` prefix plus the config
 -e KAG_sv_gravity=12 -e KAG_sv_maxping=400
 ```
 
-## Mounts
-
-| Use | Host path | Container path |
-|-----|-----------|----------------|
-| Security (admins, bans, seclevs) | `./Security` | `/opt/KAG/Security` |
-| Mods | `./Mods` | `/opt/KAG/Mods` |
-| Mod list | `./mods.cfg` | `/opt/KAG/mods.cfg` |
-| Custom autoconfig | `./autoconfig.cfg` | `/opt/KAG/autoconfig.cfg` |
-
-Copy the repo’s `Security/` folder and add your admins to `superadmin.cfg` (or use `SUPERADMIN_USERS`). If you mount your own `autoconfig.cfg`, the server uses it instead of generating one from env.
+Set `SUPERADMIN_USERS` and the entrypoint updates the superadmin list in `data/Security`. If you put `autoconfig.cfg` in `data/`, the server uses it instead of generating one from env.
